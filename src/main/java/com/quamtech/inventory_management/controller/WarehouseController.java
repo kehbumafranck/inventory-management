@@ -21,17 +21,17 @@ public class WarehouseController {
         return new ResponseEntity<>(warehouseService.createWarehouse(warehouse), HttpStatus.CREATED);
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/updateWarehouse/{id}")
     public ResponseEntity<Warehouse> updateWarehouse(@PathVariable String id, @Valid @RequestBody Warehouse warehouse) {
         return ResponseEntity.ok(warehouseService.updateWarehouse(id, warehouse));
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/getwarehouse/{id}")
     public ResponseEntity<Warehouse> getWarehouse(@PathVariable String id) {
         return ResponseEntity.ok(warehouseService.getWarehouseById(id));
     }
 
-    @GetMapping
+    @GetMapping("getAllWarehouse")
     public ResponseEntity<List<Warehouse>> getAllWarehouses(@RequestParam(required = false) Boolean active) {
         if (active != null && active) {
             return ResponseEntity.ok(warehouseService.getActiveWarehouses());
@@ -39,7 +39,7 @@ public class WarehouseController {
         return ResponseEntity.ok(warehouseService.getAllWarehouses());
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("deleteWarehouse/{id}")
     public ResponseEntity<Void> deleteWarehouse(@PathVariable String id) {
         warehouseService.deleteWarehouse(id);
         return ResponseEntity.noContent().build();

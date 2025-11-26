@@ -18,43 +18,43 @@ import java.util.Map;
 public class StockController {
     private final StockService stockService;
 
-    @PostMapping
+    @PostMapping("/createOrUpdateStock")
     public ResponseEntity<Stock> createOrUpdateStock(@Valid @RequestBody Stock stock,
                                                      @RequestParam String userId) {
         return new ResponseEntity<>(stockService.createOrUpdateStock(stock, userId), HttpStatus.CREATED);
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/getStockById/{id}")
     public ResponseEntity<Stock> getStock(@PathVariable String id) {
         return ResponseEntity.ok(stockService.getStockById(id));
     }
 
-    @GetMapping
+    @GetMapping("getAllStocks")
     public ResponseEntity<List<Stock>> getAllStocks() {
         return ResponseEntity.ok(stockService.getAllStocks());
     }
 
-    @GetMapping("/product/{productId}")
+    @GetMapping("/getStocksByProduct/{productId}")
     public ResponseEntity<List<Stock>> getStocksByProduct(@PathVariable String productId) {
         return ResponseEntity.ok(stockService.getStocksByProduct(productId));
     }
 
-    @GetMapping("/warehouse/{warehouseId}")
+    @GetMapping("/getStocksByWarehouse/{warehouseId}")
     public ResponseEntity<List<Stock>> getStocksByWarehouse(@PathVariable String warehouseId) {
         return ResponseEntity.ok(stockService.getStocksByWarehouse(warehouseId));
     }
 
-    @GetMapping("/product/{productId}/total")
+    @GetMapping("/getTotalQuantity/{productId}/total")
     public ResponseEntity<Integer> getTotalQuantity(@PathVariable String productId) {
         return ResponseEntity.ok(stockService.getTotalQuantityByProduct(productId));
     }
 
-    @GetMapping("/product/{productId}/available")
+    @GetMapping("/getAvailableQuantity/{productId}/available")
     public ResponseEntity<Integer> getAvailableQuantity(@PathVariable String productId) {
         return ResponseEntity.ok(stockService.getAvailableQuantityByProduct(productId));
     }
 
-    @PostMapping("/reserve")
+    @PostMapping("/reserveStock")
     public ResponseEntity<Void> reserveStock(@RequestBody Map<String, Object> request) {
         String productId = (String) request.get("productId");
         String warehouseId = (String) request.get("warehouseId");
@@ -67,7 +67,7 @@ public class StockController {
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping("/release")
+    @PostMapping("/releaseReservation")
     public ResponseEntity<Void> releaseReservation(@RequestBody Map<String, Object> request) {
         String productId = (String) request.get("productId");
         String warehouseId = (String) request.get("warehouseId");
@@ -81,23 +81,23 @@ public class StockController {
     }
 
     // Endpoint pour les alertes de stock (MÉTHODE, pas une classe)
-    @GetMapping("/alerts")
+    @GetMapping("/getStockAlerts")
     public ResponseEntity<List<StockAlertInfo>> getStockAlerts(
             @RequestParam(required = false) String warehouseId) {
         return ResponseEntity.ok(stockService.checkStockAlerts(warehouseId));
     }
-
-    @GetMapping("/alerts/critical")
+    //Obtenir des alert critique
+    @GetMapping("/getCriticalAlerts")
     public ResponseEntity<List<StockAlertInfo>> getCriticalAlerts() {
         return ResponseEntity.ok(stockService.getCriticalStockAlerts());
     }
-
-    @GetMapping("/alerts/reorder")
+    //Obtenir des suggestions de réapprovisionnement
+    @GetMapping("/getReorderSuggestions")
     public ResponseEntity<List<StockAlertInfo>> getReorderSuggestions() {
         return ResponseEntity.ok(stockService.getReorderSuggestions());
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/deleteStock/{id}")
     public ResponseEntity<Void> deleteStock(@PathVariable String id) {
         stockService.deleteStock(id);
         return ResponseEntity.noContent().build();

@@ -19,38 +19,38 @@ import java.util.List;
 public class StockMovementController {
     private final StockMovementService movementService;
 
-    @PostMapping
+    @PostMapping("/createMouvement")
     public ResponseEntity<StockMovement> createMovement(@Valid @RequestBody StockMovement movement,
                                                         @RequestParam String userId) {
         return new ResponseEntity<>(movementService.createMovement(movement, userId), HttpStatus.CREATED);
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/getMouvementById/{id}")
     public ResponseEntity<StockMovement> getMovement(@PathVariable String id) {
         return ResponseEntity.ok(movementService.getMovementById(id));
     }
 
-    @GetMapping
+    @GetMapping("/getAllMouvement")
     public ResponseEntity<List<StockMovement>> getAllMovements() {
         return ResponseEntity.ok(movementService.getAllMovements());
     }
 
-    @GetMapping("/product/{productId}")
+    @GetMapping("/getMovementsByProduct/{productId}")
     public ResponseEntity<List<StockMovement>> getMovementsByProduct(@PathVariable String productId) {
         return ResponseEntity.ok(movementService.getMovementsByProduct(productId));
     }
 
-    @GetMapping("/warehouse/{warehouseId}")
+    @GetMapping("/getMovementsByWarehouse/{warehouseId}")
     public ResponseEntity<List<StockMovement>> getMovementsByWarehouse(@PathVariable String warehouseId) {
         return ResponseEntity.ok(movementService.getMovementsByWarehouse(warehouseId));
     }
 
-    @GetMapping("/type/{type}")
+    @GetMapping("/getMovementsByType/{type}")
     public ResponseEntity<List<StockMovement>> getMovementsByType(@PathVariable MovementType type) {
         return ResponseEntity.ok(movementService.getMovementsByType(type));
     }
 
-    @GetMapping("/reference/{reference}")
+    @GetMapping("/getMovementsByReference/{reference}")
     public ResponseEntity<List<StockMovement>> getMovementsByReference(@PathVariable String reference) {
         return ResponseEntity.ok(movementService.getMovementsByReference(reference));
     }
@@ -62,7 +62,7 @@ public class StockMovementController {
         return ResponseEntity.ok(movementService.getMovementsByDateRange(start, end));
     }
 
-    @GetMapping("/history")
+    @GetMapping("/getProductHistory")
     public ResponseEntity<List<StockMovement>> getProductHistory(
             @RequestParam String productId,
             @RequestParam String warehouseId) {

@@ -17,32 +17,32 @@ import java.util.List;
 public class LocationController {
     private final LocationService locationService;
 
-    @PostMapping
+    @PostMapping("/createLocation")
     public ResponseEntity<Location> createLocation(@Valid @RequestBody LocationRequest location) {
         return new ResponseEntity<>(locationService.createEmplacement(location), HttpStatus.CREATED);
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/updateLocation/{id}")
     public ResponseEntity<Location> updateLocation(@PathVariable String id, @Valid @RequestBody LocationRequest location) {
         return ResponseEntity.ok(locationService.updateLocation(id, location));
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/getLocationById/{id}")
     public ResponseEntity<Location> getLocation(@PathVariable String id) {
         return ResponseEntity.ok(locationService.getLocationById(id));
     }
 
-    @GetMapping
+    @GetMapping("/getAllLocations")
     public ResponseEntity<List<Location>> getAllLocations() {
         return ResponseEntity.ok(locationService.getAllLocations());
     }
 
-    @GetMapping("/warehouse/{warehouseId}")
+    @GetMapping("/getLocationsByWarehouse/{warehouseId}")
     public ResponseEntity<List<Location>> getLocationsByWarehouse(@PathVariable String warehouseId) {
         return ResponseEntity.ok(locationService.getLocationsByWarehouse(warehouseId));
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/deleteLocation/{id}")
     public ResponseEntity<Void> deleteLocation(@PathVariable String id) {
         locationService.deleteLocation(id);
         return ResponseEntity.noContent().build();

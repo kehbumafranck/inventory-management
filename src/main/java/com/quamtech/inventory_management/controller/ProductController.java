@@ -20,22 +20,22 @@ import java.util.List;
 public class ProductController {
     private final ProductService productService;
 
-    @PostMapping
+    @PostMapping("/createProduct")
     public ResponseEntity<Product> createProduct(@Valid @RequestBody ProductRequest product) {
         return new ResponseEntity<>(productService.createProduct(product), HttpStatus.CREATED);
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/updateProduct/{id}")
     public ResponseEntity<Product> updateProduct(@PathVariable String id, @Valid @RequestBody ProductResponse product) {
         return ResponseEntity.ok(productService.updateProduct(id, product));
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("getProductById/{id}")
     public ResponseEntity<Product> getProduct(@PathVariable String id) {
         return ResponseEntity.ok(productService.getProductById(id));
     }
 
-    @GetMapping
+    @GetMapping("/getAllProducts")
     public ResponseEntity<Page<Product>> getAllProducts(@RequestParam(required = false) Boolean active, Pageable pageable) {
         if (active != null && active) {
             return ResponseEntity.ok(productService.getActiveProducts(pageable));
@@ -43,19 +43,19 @@ public class ProductController {
         return ResponseEntity.ok(productService.getAllProducts(pageable));
     }
 
-    @GetMapping("/search")
+    @GetMapping("/search Products")
     public ResponseEntity<Page<Product>> searchProducts(@RequestParam String name,Pageable pageable) {
         return ResponseEntity.ok(productService.searchProductsByName(name,pageable));
     }
 
-    @GetMapping("/sku/{sku}")
+    @GetMapping("/getProductBySku/{sku}")
     public ResponseEntity<Product> getProductBySku(@PathVariable String sku) {
         return productService.getProductBySku(sku)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/deleteProduct/{id}")
     public ResponseEntity<Void> deleteProduct(@PathVariable String id) {
         productService.deleteProduct(id);
         return ResponseEntity.noContent().build();

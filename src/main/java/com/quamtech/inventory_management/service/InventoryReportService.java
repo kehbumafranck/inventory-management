@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class InventoryReportService {
 
-
+        private final PdfGenerationService pdfGenerationService;
         private final InventoryReportRepository reportRepository;
         private final StockService stockService;
         private final StockRepository stockRepository;
@@ -423,5 +423,48 @@ public class InventoryReportService {
         public void deleteReport(String id) {
             reportRepository.deleteById(id);
         }
+    // ========== MÉTHODES DE GÉNÉRATION PDF ==========
 
+    /**
+     * Génère le rapport d'état des stocks en PDF
+     */
+    public byte[] generateStockStatusReportPdf(String warehouseId, String userId) {
+        InventoryReport report = generateStockStatusReport(warehouseId, userId);
+        return pdfGenerationService.generateStockStatusReportPdf(report);
+    }
+
+    /**
+     * Génère le rapport des mouvements en PDF
+     */
+    public byte[] generateMovementsReportPdf(LocalDateTime startDate, LocalDateTime endDate,
+                                             String warehouseId, String userId) {
+        InventoryReport report = generateMovementsReport(startDate, endDate, warehouseId, userId);
+        return pdfGenerationService.generateMovementsReportPdf(report);
+    }
+
+    /**
+     * Génère le rapport des alertes de stock faible en PDF
+     */
+    public byte[] generateLowStockAlertReportPdf(String warehouseId, String userId) {
+        InventoryReport report = generateLowStockAlertReport(warehouseId, userId);
+        return pdfGenerationService.generateLowStockAlertReportPdf(report);
+    }
+
+    /**
+     * Génère un PDF à partir d'un rapport existant
+     */
+    public byte[] generatePdfFromExistingReport(String reportId) {
+        InventoryReport report = getReportById(reportId);
+
+        switch (report.getReportType()) {
+            case STOCK_STATUS:
+                return pdfGenerationService.generateStockStatusReportPdf(report);
+            case STOCK_MOVEMENTS:
+                return pdfGenerationService.generateMovementsReportPdf(report);
+            case LOW_STOCK_ALERT:
+                return pdfGenerationService.generateLowStockAlertReportPdf(report);
+            default:
+                throw new RuntimeException("Type de rapport non supporté pour la génération PDF: " + report.getReportType());
+        }
+    }
 }
