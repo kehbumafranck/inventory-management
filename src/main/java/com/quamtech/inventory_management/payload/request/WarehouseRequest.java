@@ -2,6 +2,7 @@ package com.quamtech.inventory_management.payload.request;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -31,7 +32,7 @@ public class WarehouseRequest {
     private String contactPhone;
     @NotBlank(message = "Le nom du gerant de l'entrepôt est obligatoire")
     private String manager;
-
+    @NotNull(message = "capacité non null")
     private Double capacity; // capacité en m³
     private boolean active = true;
     private LocalDateTime createdAt;

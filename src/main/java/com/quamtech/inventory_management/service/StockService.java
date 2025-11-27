@@ -13,10 +13,7 @@ import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -29,49 +26,67 @@ public class StockService {
 
 
 
-    public Stock createOrUpdateStock(Stock stock, String userId) {
-        // 1. Calculs préliminaires
-        stock.setAvailableQuantity(stock.getQuantity() - stock.getReservedQuantity());
-        stock.setLastUpdated(LocalDateTime.now());
-        stock.setLastUpdatedBy(userId);
+    public Stock createOrUpdateStock(Stock req, String userId) {
 
-        // 2. Tentative de mise à jour
+        if (req.getQuantity() < 0) {
+            throw new IllegalArgumentException("quantity ne peut pas être négative.");
+        }
+        if (req.getReservedQuantity() < 0) {
+            throw new IllegalArgumentException("reservedQuantity ne peut pas être négative.");
+        }
+        if (req.getReservedQuantity() > req.getQuantity()) {
+            throw new IllegalArgumentException("reservedQuantity ne peut pas dépasser quantity.");
+        }
+
+        // 2. Recherche d’un stock existant
+        Optional<Stock> existingOpt =
+                stockRepository.findByProductIdAndWarehouseIdAndLocationId(
+                        req.getProductId(),
+                        req.getWarehouseId(),
+                        req.getLocationId()
+
+                );
+
+        Stock stock;
+
+        if (existingOpt.isPresent()) {
+            // 3. Mise à jour
+            stock = existingOpt.get();
+            stock.setQuantity(req.getQuantity());
+            stock.setReservedQuantity(req.getReservedQuantity());
+            stock.setAvailableQuantity(req.getQuantity() - req.getReservedQuantity());
+            stock.setExpiryDate(req.getExpiryDate());
+            stock.setLastUpdated(LocalDateTime.now());
+            stock.setLastUpdatedBy(userId);
+
+        } else {
+            // 4. Création
+            stock = Stock.builder()
+                    .productId(req.getProductId())
+                    .warehouseId(req.getWarehouseId())
+                    .locationId(req.getLocationId())
+                    .quantity(req.getQuantity())
+                    .reservedQuantity(req.getReservedQuantity())
+                    .availableQuantity(req.getQuantity() - req.getReservedQuantity())
+                    .lotNumber(req.getLotNumber())
+                    .serialNumber(req.getSerialNumber())
+                    .expiryDate(req.getExpiryDate())
+                    .lastUpdated(LocalDateTime.now())
+                    .lastUpdatedBy(userId)
+                    .build();
+        }
+
+        // 5. Sauvegarde + gestion du verrou optimiste
         try {
-            return processStockSave(stock, userId);
+            return stockRepository.save(stock);
         } catch (OptimisticLockingFailureException e) {
-            throw new RuntimeException("Le stock a été modifié par un autre utilisateur. Veuillez rafraîchir et réessayer.");
+            throw new RuntimeException(
+                    "Le stock a été modifié par un autre utilisateur. Veuillez rafraîchir et réessayer."
+            );
         }
     }
 
-    private Stock processStockSave(Stock stock, String userId) {
-        Optional<Stock> existing = stockRepository.findByProductIdAndWarehouseIdAndLocationId(
-                stock.getProductId(),
-                stock.getWarehouseId(),
-                stock.getLocationId()
-        );
 
-        if (existing.isPresent()) {
-            Stock existingStock = existing.get();
-
-            // Mise à jour des champs
-            existingStock.setQuantity(stock.getQuantity());
-            existingStock.setReservedQuantity(stock.getReservedQuantity());
-            existingStock.setAvailableQuantity(stock.getAvailableQuantity());
-            existingStock.setLotNumber(stock.getLotNumber());
-            existingStock.setExpiryDate(stock.getExpiryDate());
-            existingStock.setSerialNumber(stock.getSerialNumber());
-            existingStock.setSerialNumberStatus(stock.getSerialNumberStatus());
-
-            // Audit
-            existingStock.setLastUpdated(stock.getLastUpdated());
-            existingStock.setLastUpdatedBy(userId);
-
-            // IMPORTANT : Spring va vérifier ici si existingStock.version == version_en_base
-            return stockRepository.save(existingStock);
-        }
-
-        return stockRepository.save(stock);
-    }
 
     public Stock getStockById(String id) {
         return stockRepository.findById(id)
@@ -79,45 +94,80 @@ public class StockService {
     }
 
     public List<Stock> getStocksByProduct(String productId) {
+        boolean stock =stockRepository.existsByproductId(productId);
+        if (!stock){
+            throw  new IllegalArgumentException("le stock avec cet id"+productId+"n'existe pas");
+        }
         return stockRepository.findByProductId(productId);
     }
 
     public List<Stock> getStocksByWarehouse(String warehouseId) {
+        List<Stock> stockList=stockRepository.findByWarehouseId(warehouseId);
+        if (stockList.isEmpty()){
+            throw new RuntimeException("liste de stock par entrepot");
+        }
         return stockRepository.findByWarehouseId(warehouseId);
     }
 
-    public List<Stock> getStocksByLot(String lotNumber) {
-        return stockRepository.findByLotNumber(lotNumber);
-    }
-
-    public List<Stock> getStocksBySerialNumber(String serialNumber) {
-        return stockRepository.findBySerialNumber(serialNumber);
-    }
+//    public List<Stock> getStocksByLot(String lotNumber) {
+//        List<Stock> stockList=stockRepository.findByLotNumber(lotNumber);
+//        if (stockList.isEmpty()){
+//            throw new RuntimeException("liste de stock par numero de lot");
+//        }
+//        return stockRepository.findByLotNumber(lotNumber);
+//    }
+//
+//    public List<Stock> getStocksBySerialNumber(String serialNumber) {
+//        List<Stock> stockList=stockRepository.findBySerialNumber(serialNumber);
+//        if (stockList.isEmpty()){
+//            throw new RuntimeException("liste de stock par numero de seri");
+//        }
+//        return stockRepository.findBySerialNumber(serialNumber);
+//    }
     // recuperé les stocks d’un produit donné dont les numéros de série sont disponibles.
-    public List<Stock> getAvailableSerialNumbers(String productId) {
-        return stockRepository.findByProductId(productId).stream()
-                .filter(s -> "AVAILABLE".equals(s.getSerialNumberStatus()))
-                .collect(Collectors.toList());
-    }
+//    public List<Stock> getAvailableSerialNumbers(String productId) {
+//        return stockRepository.findByProductId(productId).stream()
+//                .filter(s -> "AVAILABLE".equals(s.getSerialNumberStatus()))
+//                .collect(Collectors.toList());
+//    }
 
     public List<Stock> getAllStocks() {
+        List<Stock> stockList=stockRepository.findAll();
+        if (stockList.isEmpty()){
+            throw new RuntimeException("liste de stock ");
+        }
         return stockRepository.findAll();
     }
     //recuperé la quantité  totale d’un produit
     public Integer getTotalQuantityByProduct(String productId) {
-        return stockRepository.findByProductId(productId).stream()
-                .mapToInt(Stock::getQuantity)
-                .sum();
+        if (!stockRepository.existsByproductId(productId)) {
+            throw new IllegalArgumentException("Le product avec l'id"+productId+"n'existe pas");
+        }
+
+            return stockRepository.findByProductId(productId).stream()
+                    .map(Stock::getQuantity)
+                    .filter(Objects::nonNull)
+                    .mapToInt(Integer::intValue)
+                    .sum();
+
     }
     //recuperé la quantité disponible par un produit
     public Integer getAvailableQuantityByProduct(String productId) {
+
+        if (!stockRepository.existsByproductId(productId)) {
+            throw new IllegalArgumentException("Le product avec l'id"+productId+"n'existe pas");
+        }
+
         return stockRepository.findByProductId(productId).stream()
-                .mapToInt(Stock::getAvailableQuantity)
+                .map(Stock::getAvailableQuantity)
+                .filter(Objects::nonNull)
+                .mapToInt(Integer::intValue)
                 .sum();
     }
+
     //faire une reservation de stock
-    public void reserveStock(String productId, String warehouseId, String locationId,
-                             String lotId, Integer quantity, String userId) {
+    public Stock reserveStock(String productId, String warehouseId, String locationId,
+                              String lotId, Integer quantity, String userId) {
         Optional<Stock> stockOpt = stockRepository.findByProductIdAndWarehouseIdAndLocationId(
                 productId, warehouseId, locationId);
 
@@ -134,11 +184,12 @@ public class StockService {
         stock.setAvailableQuantity(stock.getQuantity() - stock.getReservedQuantity());
         stock.setLastUpdated(LocalDateTime.now());
         stock.setLastUpdatedBy(userId);
-        stockRepository.save(stock);
+
+        return stockRepository.save(stock);
     }
     //Cette méthode annule une partie d’une réservation et remet cette quantité dans le stock disponible
-    public void releaseReservation(String productId, String warehouseId, String locationId,
-                                   String lotId, Integer quantity, String userId) {
+    public Stock releaseReservation(String productId, String warehouseId, String locationId,
+                                    String lotId, Integer quantity, String userId) {
         Optional<Stock> stockOpt = stockRepository.findByProductIdAndWarehouseIdAndLocationId(
                 productId, warehouseId, locationId);
 
@@ -151,7 +202,8 @@ public class StockService {
         stock.setAvailableQuantity(stock.getQuantity() - stock.getReservedQuantity());
         stock.setLastUpdated(LocalDateTime.now());
         stock.setLastUpdatedBy(userId);
-        stockRepository.save(stock);
+
+        return stockRepository.save(stock);
     }
 
     // MÉTHODE pour vérifier les alertes de stock (pas une classe!)
@@ -225,18 +277,32 @@ public class StockService {
     }
     //recuperé le niveau qu'il faut commandé
     public List<StockAlertInfo> getReorderSuggestions() {
-        return checkStockAlerts(null).stream()
+
+        List<StockAlertInfo> alerts = checkStockAlerts(null);
+
+        if (alerts == null || alerts.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return alerts.stream()
                 .filter(alert -> alert.getAlertLevel() == StockAlertInfo.AlertLevel.REORDER)
                 .collect(Collectors.toList());
     }
     // recuperé le Stock en dessous du seuil minimum
     public List<StockAlertInfo> getCriticalStockAlerts() {
-        return checkStockAlerts(null).stream()
+        List<StockAlertInfo> alerts = checkStockAlerts(null);
+
+        if (alerts == null || alerts.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return alerts.stream()
                 .filter(alert -> alert.getAlertLevel() == StockAlertInfo.AlertLevel.CRITICAL)
                 .collect(Collectors.toList());
     }
     // suprimé le stock par id
     public void deleteStock(String id) {
+        if (!stockRepository.existsById(id)) {
+            throw new RuntimeException("Stock avec l'ID " + id + " n'existe pas.");
+        }
         stockRepository.deleteById(id);
     }
 }

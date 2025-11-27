@@ -1,9 +1,12 @@
 package com.quamtech.inventory_management.service;
 
 import com.quamtech.inventory_management.entite.Warehouse;
+import com.quamtech.inventory_management.payload.ApiResponse;
+import com.quamtech.inventory_management.payload.request.WarehouseRequest;
 import com.quamtech.inventory_management.repository.WarehouseRepository;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -14,7 +17,7 @@ import java.util.List;
 public class WarehouseService {
     private final WarehouseRepository warehouseRepository;
 
-    public Warehouse createWarehouse( Warehouse warehouseRequest) {
+    public Warehouse createWarehouse( WarehouseRequest warehouseRequest) {
         Warehouse createWarehouse1=Warehouse.builder()
                 .name(warehouseRequest.getName())
                 .code(warehouseRequest.getCode())
@@ -26,12 +29,13 @@ public class WarehouseService {
                 .contactPhone(warehouseRequest.getContactPhone())
                 .manager(warehouseRequest.getManager())
                 .capacity(warehouseRequest.getCapacity())
-                .active(warehouseRequest.isActive())
+                .active(true)
                 .createdAt(warehouseRequest.getCreatedAt())
                 .build();
         return warehouseRepository.save(createWarehouse1);
     }
-    public Warehouse updateWarehouse(String id,  Warehouse warehouseRequest) {
+
+    public Warehouse updateWarehouse(String id,  WarehouseRequest warehouseRequest) {
         Warehouse existing = getWarehouseById(id);
         existing.setName(warehouseRequest.getName());
         existing.setCode(warehouseRequest.getCode());
@@ -43,7 +47,7 @@ public class WarehouseService {
         existing.setContactPhone(warehouseRequest.getContactPhone());
         existing.setManager(warehouseRequest.getManager());
         existing.setCapacity(warehouseRequest.getCapacity());
-        existing.setActive(warehouseRequest.isActive());
+        existing.setActive(true);
         existing.setUpdatedAt(LocalDateTime.now());
         return warehouseRepository.save(existing);
     }
@@ -53,6 +57,10 @@ public class WarehouseService {
     }
 
     public List<Warehouse> getAllWarehouses() {
+        List<Warehouse>warehouseList=warehouseRepository.findAll();
+        if (warehouseList.isEmpty()){
+            throw  new RuntimeException("liste dentrepot vide");
+        }
         return warehouseRepository.findAll();
     }
 

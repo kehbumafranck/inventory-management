@@ -1,7 +1,10 @@
 package com.quamtech.inventory_management.controller;
 
 import com.quamtech.inventory_management.entite.Stock;
+import com.quamtech.inventory_management.entite.Warehouse;
+import com.quamtech.inventory_management.payload.ApiResponse;
 import com.quamtech.inventory_management.payload.StockAlertInfo;
+import com.quamtech.inventory_management.payload.request.StockRequest;
 import com.quamtech.inventory_management.service.StockService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -19,14 +22,17 @@ public class StockController {
     private final StockService stockService;
 
     @PostMapping("/createOrUpdateStock")
-    public ResponseEntity<Stock> createOrUpdateStock(@Valid @RequestBody Stock stock,
-                                                     @RequestParam String userId) {
-        return new ResponseEntity<>(stockService.createOrUpdateStock(stock, userId), HttpStatus.CREATED);
+    public ResponseEntity<ApiResponse<Stock>> createOrUpdateStock(@Valid @RequestBody Stock stockRequest,
+                                                              @RequestParam String userId) {
+        Stock stock1 =stockService.createOrUpdateStock(stockRequest,userId);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success("entrepot créé avec succès", stock1));
     }
 
     @GetMapping("/getStockById/{id}")
-    public ResponseEntity<Stock> getStock(@PathVariable String id) {
-        return ResponseEntity.ok(stockService.getStockById(id));
+    public ResponseEntity<ApiResponse<Stock>> getStock(@PathVariable String id) {
+        Stock stock=stockService.getStockById(id);
+        return ResponseEntity.ok(ApiResponse.success("l'entrepot  avec l'id"+id+"est", stock));
     }
 
     @GetMapping("getAllStocks")
@@ -35,27 +41,31 @@ public class StockController {
     }
 
     @GetMapping("/getStocksByProduct/{productId}")
-    public ResponseEntity<List<Stock>> getStocksByProduct(@PathVariable String productId) {
-        return ResponseEntity.ok(stockService.getStocksByProduct(productId));
+    public ResponseEntity<ApiResponse<List<Stock>>> getStocksByProduct(@PathVariable String productId) {
+        List<Stock>stockList=stockService.getAllStocks();
+        return ResponseEntity.ok(ApiResponse.success("list des stock du produit avec l'id"+productId+" sont",stockList));
     }
 
     @GetMapping("/getStocksByWarehouse/{warehouseId}")
-    public ResponseEntity<List<Stock>> getStocksByWarehouse(@PathVariable String warehouseId) {
-        return ResponseEntity.ok(stockService.getStocksByWarehouse(warehouseId));
+    public ResponseEntity<ApiResponse<List<Stock>>> getStocksByWarehouse(@PathVariable String warehouseId) {
+        List<Stock>stockList=stockService.getStocksByWarehouse(warehouseId);
+        return ResponseEntity.ok(ApiResponse.success("la list est",stockList));
     }
 
     @GetMapping("/getTotalQuantity/{productId}/total")
-    public ResponseEntity<Integer> getTotalQuantity(@PathVariable String productId) {
-        return ResponseEntity.ok(stockService.getTotalQuantityByProduct(productId));
+    public ResponseEntity<ApiResponse<Integer>> getTotalQuantity(@PathVariable String productId) {
+        Integer stock=stockService.getTotalQuantityByProduct(productId);
+        return ResponseEntity.ok(ApiResponse.success("liste est",stock));
     }
 
     @GetMapping("/getAvailableQuantity/{productId}/available")
-    public ResponseEntity<Integer> getAvailableQuantity(@PathVariable String productId) {
-        return ResponseEntity.ok(stockService.getAvailableQuantityByProduct(productId));
+    public ResponseEntity<ApiResponse<Integer>> getAvailableQuantity(@PathVariable String productId) {
+        Integer stock =stockService.getAvailableQuantityByProduct(productId);
+        return ResponseEntity.ok(ApiResponse.success("les data sont",stock));
     }
 
     @PostMapping("/reserveStock")
-    public ResponseEntity<Void> reserveStock(@RequestBody Map<String, Object> request) {
+    public ResponseEntity<ApiResponse<?>> reserveStock(@RequestBody Map<String, Object> request) {
         String productId = (String) request.get("productId");
         String warehouseId = (String) request.get("warehouseId");
         String locationId = (String) request.get("locationId");
@@ -63,12 +73,12 @@ public class StockController {
         Integer quantity = (Integer) request.get("quantity");
         String userId = (String) request.get("userId");
 
-        stockService.reserveStock(productId, warehouseId, locationId, lotId, quantity, userId);
-        return ResponseEntity.ok().build();
+        Stock stock= stockService.reserveStock(productId, warehouseId, locationId, lotId, quantity, userId);
+        return ResponseEntity.ok(ApiResponse.success("data",stock));
     }
 
     @PostMapping("/releaseReservation")
-    public ResponseEntity<Void> releaseReservation(@RequestBody Map<String, Object> request) {
+    public ResponseEntity<ApiResponse<?>> releaseReservation(@RequestBody Map<String, Object> request) {
         String productId = (String) request.get("productId");
         String warehouseId = (String) request.get("warehouseId");
         String locationId = (String) request.get("locationId");
@@ -76,30 +86,33 @@ public class StockController {
         Integer quantity = (Integer) request.get("quantity");
         String userId = (String) request.get("userId");
 
-        stockService.releaseReservation(productId, warehouseId, locationId, lotId, quantity, userId);
-        return ResponseEntity.ok().build();
+       Stock stock= stockService.releaseReservation(productId, warehouseId, locationId, lotId, quantity, userId);
+        return ResponseEntity.ok(ApiResponse.success("data",stock));
     }
 
     // Endpoint pour les alertes de stock (MÉTHODE, pas une classe)
     @GetMapping("/getStockAlerts")
-    public ResponseEntity<List<StockAlertInfo>> getStockAlerts(
+    public ResponseEntity<ApiResponse<List<StockAlertInfo>>> getStockAlerts(
             @RequestParam(required = false) String warehouseId) {
-        return ResponseEntity.ok(stockService.checkStockAlerts(warehouseId));
+        List<StockAlertInfo> stock=stockService.checkStockAlerts(warehouseId);
+        return ResponseEntity.ok(ApiResponse.success("data",stock));
     }
     //Obtenir des alert critique
     @GetMapping("/getCriticalAlerts")
-    public ResponseEntity<List<StockAlertInfo>> getCriticalAlerts() {
-        return ResponseEntity.ok(stockService.getCriticalStockAlerts());
+    public ResponseEntity<ApiResponse<List<StockAlertInfo>>> getCriticalAlerts() {
+        List<StockAlertInfo> stock=stockService.getCriticalStockAlerts();
+        return ResponseEntity.ok(ApiResponse.success("data",stock));
     }
     //Obtenir des suggestions de réapprovisionnement
     @GetMapping("/getReorderSuggestions")
-    public ResponseEntity<List<StockAlertInfo>> getReorderSuggestions() {
-        return ResponseEntity.ok(stockService.getReorderSuggestions());
+    public ResponseEntity<ApiResponse<List<StockAlertInfo>>> getReorderSuggestions() {
+        List<StockAlertInfo> stockAlertInfos=stockService.getReorderSuggestions();
+        return ResponseEntity.ok(ApiResponse.success("data",stockAlertInfos));
     }
 
     @DeleteMapping("/deleteStock/{id}")
-    public ResponseEntity<Void> deleteStock(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<Void>> deleteStock(@PathVariable String id) {
         stockService.deleteStock(id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(ApiResponse.success("entrepot supprimé avec succes", null));
     }
 }

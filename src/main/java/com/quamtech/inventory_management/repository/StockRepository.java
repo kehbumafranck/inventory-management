@@ -25,4 +25,6 @@ public interface StockRepository extends MongoRepository<Stock,String> {
 
     @Query("{ 'productId': ?0, 'quantity': { $gt: 0 } }")
     List<Stock> findByProductIdWithQuantity(String productId);
+
+    boolean existsByproductId(String productId);
 }
