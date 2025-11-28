@@ -2,6 +2,7 @@ package com.quamtech.inventory_management.controller;
 
 import com.quamtech.inventory_management.entite.Stock;
 import com.quamtech.inventory_management.entite.Warehouse;
+import com.quamtech.inventory_management.exception.InventoryException;
 import com.quamtech.inventory_management.payload.ApiResponse;
 import com.quamtech.inventory_management.payload.StockAlertInfo;
 import com.quamtech.inventory_management.payload.request.StockRequest;
@@ -23,49 +24,49 @@ public class StockController {
 
     @PostMapping("/createOrUpdateStock")
     public ResponseEntity<ApiResponse<Stock>> createOrUpdateStock(@Valid @RequestBody Stock stockRequest,
-                                                              @RequestParam String userId) {
+                                                              @RequestParam String userId) throws InventoryException {
         Stock stock1 =stockService.createOrUpdateStock(stockRequest,userId);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success("entrepot créé avec succès", stock1));
     }
 
     @GetMapping("/getStockById/{id}")
-    public ResponseEntity<ApiResponse<Stock>> getStock(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<Stock>> getStock(@PathVariable String id) throws InventoryException {
         Stock stock=stockService.getStockById(id);
         return ResponseEntity.ok(ApiResponse.success("l'entrepot  avec l'id"+id+"est", stock));
     }
 
     @GetMapping("getAllStocks")
-    public ResponseEntity<List<Stock>> getAllStocks() {
-        return ResponseEntity.ok(stockService.getAllStocks());
+    public ResponseEntity<ApiResponse<List<Stock>>> getAllStocks()throws InventoryException {
+        return ResponseEntity.ok(ApiResponse.success("la liste est",stockService.getAllStocks()));
     }
 
     @GetMapping("/getStocksByProduct/{productId}")
-    public ResponseEntity<ApiResponse<List<Stock>>> getStocksByProduct(@PathVariable String productId) {
-        List<Stock>stockList=stockService.getAllStocks();
+    public ResponseEntity<ApiResponse<List<Stock>>> getStocksByProduct(@PathVariable String productId) throws InventoryException {
+        List<Stock>stockList=stockService.getStocksByProduct(productId);
         return ResponseEntity.ok(ApiResponse.success("list des stock du produit avec l'id"+productId+" sont",stockList));
     }
 
     @GetMapping("/getStocksByWarehouse/{warehouseId}")
-    public ResponseEntity<ApiResponse<List<Stock>>> getStocksByWarehouse(@PathVariable String warehouseId) {
+    public ResponseEntity<ApiResponse<List<Stock>>> getStocksByWarehouse(@PathVariable String warehouseId) throws InventoryException {
         List<Stock>stockList=stockService.getStocksByWarehouse(warehouseId);
         return ResponseEntity.ok(ApiResponse.success("la list est",stockList));
     }
 
     @GetMapping("/getTotalQuantity/{productId}/total")
-    public ResponseEntity<ApiResponse<Integer>> getTotalQuantity(@PathVariable String productId) {
+    public ResponseEntity<ApiResponse<Integer>> getTotalQuantity(@PathVariable String productId)throws InventoryException {
         Integer stock=stockService.getTotalQuantityByProduct(productId);
-        return ResponseEntity.ok(ApiResponse.success("liste est",stock));
+        return ResponseEntity.ok(ApiResponse.success("la totalité de la quantité est",stock));
     }
 
     @GetMapping("/getAvailableQuantity/{productId}/available")
-    public ResponseEntity<ApiResponse<Integer>> getAvailableQuantity(@PathVariable String productId) {
+    public ResponseEntity<ApiResponse<Integer>> getAvailableQuantity(@PathVariable String productId) throws InventoryException {
         Integer stock =stockService.getAvailableQuantityByProduct(productId);
         return ResponseEntity.ok(ApiResponse.success("les data sont",stock));
     }
 
     @PostMapping("/reserveStock")
-    public ResponseEntity<ApiResponse<?>> reserveStock(@RequestBody Map<String, Object> request) {
+    public ResponseEntity<ApiResponse<?>> reserveStock(@RequestBody Map<String, Object> request) throws InventoryException {
         String productId = (String) request.get("productId");
         String warehouseId = (String) request.get("warehouseId");
         String locationId = (String) request.get("locationId");

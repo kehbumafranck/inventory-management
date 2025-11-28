@@ -2,6 +2,7 @@ package com.quamtech.inventory_management.controller;
 
 import com.quamtech.inventory_management.entite.StockMovement;
 import com.quamtech.inventory_management.enumeration.MovementType;
+import com.quamtech.inventory_management.exception.InventoryException;
 import com.quamtech.inventory_management.service.StockMovementService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +22,7 @@ public class StockMovementController {
 
     @PostMapping("/createMouvement")
     public ResponseEntity<StockMovement> createMovement(@Valid @RequestBody StockMovement movement,
-                                                        @RequestParam String userId) {
+                                                        @RequestParam String userId) throws InventoryException {
         return new ResponseEntity<>(movementService.createMovement(movement, userId), HttpStatus.CREATED);
     }
 

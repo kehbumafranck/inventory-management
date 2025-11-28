@@ -1,6 +1,8 @@
 package com.quamtech.inventory_management.service;
 
 import com.quamtech.inventory_management.entite.Product;
+import com.quamtech.inventory_management.entite.Warehouse;
+import com.quamtech.inventory_management.exception.InventoryException;
 import com.quamtech.inventory_management.payload.request.ProductRequest;
 import com.quamtech.inventory_management.payload.response.ProductResponse;
 import com.quamtech.inventory_management.repository.ProductRepository;
@@ -42,7 +44,7 @@ public class ProductService {
                .build();
        return  productRepository.save(ceateProduit);
     }
-    public Product updateProduct(String id,  ProductResponse product) {
+    public Product updateProduct(String id,  ProductResponse product) throws InventoryException {
         Product existing = getProductById(id);
         existing.setName(product.getName());
         existing.setDescription(product.getDescription());
@@ -65,40 +67,51 @@ public class ProductService {
         return productRepository.save(existing);
     }
 
-    public Product getProductById(String id) {
+    public Product getProductById(String id) throws InventoryException {
         return productRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Produit non trouvé avec l'ID: " + id));
+                .orElseThrow(() -> new InventoryException("Produit non trouvé avec l'ID: " + id));
     }
 
-    public Page<Product> getAllProducts(Pageable pageable) {
-        return productRepository.findAll(pageable);
+    public Page<Product> getAllProducts(Pageable pageable) throws InventoryException {
+        Page<Product>productPage=productRepository.findAll(pageable);
+        if (productPage.isEmpty()){
+            throw  new InventoryException("produit vide");
+        }
+        return productPage;
     }
-
-    public Page<Product> getActiveProducts(Pageable pageable) {
-        return productRepository.findByActiveTrue(pageable);
-    }
-
     public void deleteProduct(String id) {
         productRepository.deleteById(id);
     }
-    public Page<Product> searchProductsByName(String name,Pageable pageable) {
-        return productRepository.findByNameContainingIgnoreCase(name,pageable);
+    public Page<Product> searchProductsByName(String name,Pageable pageable) throws InventoryException {
+        Page<Product>productPage =productRepository.findByNameContainingIgnoreCase(name,pageable);
+        if (productPage !=null && !productPage.isEmpty()){
+            return productPage;
+        }
+         throw new InventoryException("le produit avec ce nom n'existe pas");
     }
-    public  Page<Product>getProductByTrackByLotTrue(Pageable pageable){
-        return productRepository.findByTrackByLotTrue(pageable);
+    public Optional<Product> getProductBySku(String sku) throws InventoryException {
+        Optional<Product> productOptional=productRepository.findBySku(sku);
+        if (productOptional.isPresent()){
+            return productRepository.findBySku(sku);
+        }
+        throw new InventoryException("le produit avec le sku n'existe pas");
     }
-    public Page<Product>getproductByTrackBySerialNumberTrue(Pageable pageable){
-        return productRepository.findByTrackBySerialNumberTrue(pageable);
+        public Page<Product> getActiveProducts(Pageable pageable) {
+        return productRepository.findByActiveTrue(pageable);
     }
-    public Optional<Product> getProductBySku(String sku) {
-        return productRepository.findBySku(sku);
-    }
+//    public  Page<Product>getProductByTrackByLotTrue(Pageable pageable){
+//        return productRepository.findByTrackByLotTrue(pageable);
+//    }
+//    public Page<Product>getproductByTrackBySerialNumberTrue(Pageable pageable){
+//        return productRepository.findByTrackBySerialNumberTrue(pageable);
+//    }
 
-    public Page<Product> getProductsByLot(String lotNumber,Pageable pageable) {
-        return productRepository.findByLotNumber(lotNumber,pageable);
-    }
 
-    public Page<Product> getProductsBySerialNumber(String serialNumber,Pageable pageable) {
-        return productRepository.findBySerialNumber(serialNumber,pageable);
-    }
+//    public Page<Product> getProductsByLot(String lotNumber,Pageable pageable) {
+//        return productRepository.findByLotNumber(lotNumber,pageable);
+//    }
+//
+//    public Page<Product> getProductsBySerialNumber(String serialNumber,Pageable pageable) {
+//        return productRepository.findBySerialNumber(serialNumber,pageable);
+//    }
 }

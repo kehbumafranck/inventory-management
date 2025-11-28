@@ -1,6 +1,7 @@
 package com.quamtech.inventory_management.controller;
 
 import com.quamtech.inventory_management.entite.Product;
+import com.quamtech.inventory_management.exception.InventoryException;
 import com.quamtech.inventory_management.payload.request.ProductRequest;
 import com.quamtech.inventory_management.payload.response.ProductResponse;
 import com.quamtech.inventory_management.service.ProductService;
@@ -26,30 +27,30 @@ public class ProductController {
     }
 
     @PutMapping("/updateProduct/{id}")
-    public ResponseEntity<Product> updateProduct(@PathVariable String id, @Valid @RequestBody ProductResponse product) {
+    public ResponseEntity<Product> updateProduct(@PathVariable String id, @Valid @RequestBody ProductResponse product) throws InventoryException {
         return ResponseEntity.ok(productService.updateProduct(id, product));
     }
 
     @GetMapping("getProductById/{id}")
-    public ResponseEntity<Product> getProduct(@PathVariable String id) {
+    public ResponseEntity<Product> getProduct(@PathVariable String id) throws InventoryException {
         return ResponseEntity.ok(productService.getProductById(id));
     }
 
     @GetMapping("/getAllProducts")
-    public ResponseEntity<Page<Product>> getAllProducts(@RequestParam(required = false) Boolean active, Pageable pageable) {
-        if (active != null && active) {
+    public ResponseEntity<Page<Product>> getAllProducts(@RequestParam(required = false) Boolean active, Pageable pageable) throws InventoryException {
+        if (active=true) {
             return ResponseEntity.ok(productService.getActiveProducts(pageable));
         }
         return ResponseEntity.ok(productService.getAllProducts(pageable));
     }
 
     @GetMapping("/search Products")
-    public ResponseEntity<Page<Product>> searchProducts(@RequestParam String name,Pageable pageable) {
+    public ResponseEntity<Page<Product>> searchProducts(@RequestParam String name,Pageable pageable) throws InventoryException {
         return ResponseEntity.ok(productService.searchProductsByName(name,pageable));
     }
 
     @GetMapping("/getProductBySku/{sku}")
-    public ResponseEntity<Product> getProductBySku(@PathVariable String sku) {
+    public ResponseEntity<Product> getProductBySku(@PathVariable String sku) throws InventoryException {
         return productService.getProductBySku(sku)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());

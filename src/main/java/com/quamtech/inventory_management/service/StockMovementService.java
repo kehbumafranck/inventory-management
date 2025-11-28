@@ -3,6 +3,7 @@ package com.quamtech.inventory_management.service;
 import com.quamtech.inventory_management.entite.Stock;
 import com.quamtech.inventory_management.entite.StockMovement;
 import com.quamtech.inventory_management.enumeration.MovementType;
+import com.quamtech.inventory_management.exception.InventoryException;
 import com.quamtech.inventory_management.repository.StockMovementRepository;
 import com.quamtech.inventory_management.utils.DateUtilitie;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +20,7 @@ public class StockMovementService {
     private final StockMovementRepository movementRepository;
     private final StockService stockService;
 
-    public StockMovement createMovement(StockMovement mouvementRequest, String userId) {
+    public StockMovement createMovement(StockMovement mouvementRequest, String userId) throws InventoryException {
 
         LocalDate movementDate;
         try {
@@ -64,7 +65,7 @@ public class StockMovementService {
 
 
 
-    private void updateStockFromMovement(StockMovement movement, String userId) {
+    private void updateStockFromMovement(StockMovement movement, String userId) throws InventoryException {
         Stock stock = stockService.getStocksByProduct(movement.getProductId()).stream()
                 .filter(s -> s.getWarehouseId().equals(movement.getWarehouseId()) &&
                         Objects.equals(s.getLocationId(), movement.getLocationId()))

@@ -3,6 +3,7 @@ package com.quamtech.inventory_management.service;
 import com.quamtech.inventory_management.entite.Product;
 import com.quamtech.inventory_management.entite.Stock;
 import com.quamtech.inventory_management.entite.Warehouse;
+import com.quamtech.inventory_management.exception.InventoryException;
 import com.quamtech.inventory_management.payload.StockAlertInfo;
 import com.quamtech.inventory_management.repository.LocationRepository;
 import com.quamtech.inventory_management.repository.ProductRepository;
@@ -26,16 +27,16 @@ public class StockService {
 
 
 
-    public Stock createOrUpdateStock(Stock req, String userId) {
+    public Stock createOrUpdateStock(Stock req, String userId) throws InventoryException {
 
         if (req.getQuantity() < 0) {
-            throw new IllegalArgumentException("quantity ne peut pas être négative.");
+            throw new InventoryException("quantity ne peut pas être négative.");
         }
         if (req.getReservedQuantity() < 0) {
-            throw new IllegalArgumentException("reservedQuantity ne peut pas être négative.");
+            throw new InventoryException("reservedQuantity ne peut pas être négative.");
         }
         if (req.getReservedQuantity() > req.getQuantity()) {
-            throw new IllegalArgumentException("reservedQuantity ne peut pas dépasser quantity.");
+            throw new InventoryException("reservedQuantity ne peut pas dépasser quantity.");
         }
 
         // 2. Recherche d’un stock existant
@@ -80,7 +81,7 @@ public class StockService {
         try {
             return stockRepository.save(stock);
         } catch (OptimisticLockingFailureException e) {
-            throw new RuntimeException(
+            throw new InventoryException(
                     "Le stock a été modifié par un autre utilisateur. Veuillez rafraîchir et réessayer."
             );
         }
@@ -88,23 +89,23 @@ public class StockService {
 
 
 
-    public Stock getStockById(String id) {
+    public Stock getStockById(String id) throws InventoryException {
         return stockRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Stock non trouvé avec l'ID: " + id));
+                .orElseThrow(() -> new InventoryException("Stock non trouvé avec l'ID: " + id));
     }
 
-    public List<Stock> getStocksByProduct(String productId) {
-        boolean stock =stockRepository.existsByproductId(productId);
-        if (!stock){
-            throw  new IllegalArgumentException("le stock avec cet id"+productId+"n'existe pas");
+    public List<Stock> getStocksByProduct(String productId) throws InventoryException {
+        List<Stock> stock =stockRepository.findByProductId(productId);
+        if (stock.isEmpty()){
+            throw  new InventoryException("le stock avec cet id"+productId+"n'existe pas");
         }
-        return stockRepository.findByProductId(productId);
+        return stock ;
     }
 
-    public List<Stock> getStocksByWarehouse(String warehouseId) {
+    public List<Stock> getStocksByWarehouse(String warehouseId) throws InventoryException {
         List<Stock> stockList=stockRepository.findByWarehouseId(warehouseId);
         if (stockList.isEmpty()){
-            throw new RuntimeException("liste de stock par entrepot");
+            throw new InventoryException("liste de stock de l'entrepot avec l'id="+warehouseId+"n'existe pas");
         }
         return stockRepository.findByWarehouseId(warehouseId);
     }
@@ -131,17 +132,17 @@ public class StockService {
 //                .collect(Collectors.toList());
 //    }
 
-    public List<Stock> getAllStocks() {
+    public List<Stock> getAllStocks() throws InventoryException {
         List<Stock> stockList=stockRepository.findAll();
         if (stockList.isEmpty()){
-            throw new RuntimeException("liste de stock ");
+            throw new InventoryException("liste de stock ");
         }
         return stockRepository.findAll();
     }
-    //recuperé la quantité  totale d’un produit
-    public Integer getTotalQuantityByProduct(String productId) {
+    //recuperé la quantité  totale en stock d’un produit
+    public Integer getTotalQuantityByProduct(String productId) throws InventoryException {
         if (!stockRepository.existsByproductId(productId)) {
-            throw new IllegalArgumentException("Le product avec l'id"+productId+"n'existe pas");
+            throw new InventoryException("Le product avec l'id"+productId+"n'existe pas");
         }
 
             return stockRepository.findByProductId(productId).stream()
@@ -151,11 +152,11 @@ public class StockService {
                     .sum();
 
     }
-    //recuperé la quantité disponible par un produit
-    public Integer getAvailableQuantityByProduct(String productId) {
+    //recuperé la quantité disponible en stock par un produit
+    public Integer getAvailableQuantityByProduct(String productId) throws InventoryException {
 
         if (!stockRepository.existsByproductId(productId)) {
-            throw new IllegalArgumentException("Le product avec l'id"+productId+"n'existe pas");
+            throw new InventoryException("Le product avec l'id"+productId+"n'existe pas");
         }
 
         return stockRepository.findByProductId(productId).stream()
@@ -167,17 +168,17 @@ public class StockService {
 
     //faire une reservation de stock
     public Stock reserveStock(String productId, String warehouseId, String locationId,
-                              String lotId, Integer quantity, String userId) {
+                              String lotId, Integer quantity, String userId) throws InventoryException {
         Optional<Stock> stockOpt = stockRepository.findByProductIdAndWarehouseIdAndLocationId(
                 productId, warehouseId, locationId);
 
         if (!stockOpt.isPresent()) {
-            throw new RuntimeException("Stock non trouvé");
+            throw new InventoryException("Stock non trouvé");
         }
 
         Stock stock = stockOpt.get();
         if (stock.getAvailableQuantity() < quantity) {
-            throw new RuntimeException("Quantité disponible insuffisante");
+            throw new InventoryException("Quantité disponible insuffisante");
         }
 
         stock.setReservedQuantity(stock.getReservedQuantity() + quantity);

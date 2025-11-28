@@ -1,6 +1,7 @@
 package com.quamtech.inventory_management.service;
 
 import com.quamtech.inventory_management.entite.Warehouse;
+import com.quamtech.inventory_management.exception.InventoryException;
 import com.quamtech.inventory_management.payload.ApiResponse;
 import com.quamtech.inventory_management.payload.request.WarehouseRequest;
 import com.quamtech.inventory_management.repository.WarehouseRepository;
@@ -35,7 +36,7 @@ public class WarehouseService {
         return warehouseRepository.save(createWarehouse1);
     }
 
-    public Warehouse updateWarehouse(String id,  WarehouseRequest warehouseRequest) {
+    public Warehouse updateWarehouse(String id,  WarehouseRequest warehouseRequest) throws InventoryException {
         Warehouse existing = getWarehouseById(id);
         existing.setName(warehouseRequest.getName());
         existing.setCode(warehouseRequest.getCode());
@@ -51,9 +52,10 @@ public class WarehouseService {
         existing.setUpdatedAt(LocalDateTime.now());
         return warehouseRepository.save(existing);
     }
-    public Warehouse getWarehouseById(String id) {
+    public Warehouse getWarehouseById(String id) throws InventoryException {
+
         return warehouseRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Entrepôt non trouvé avec l'ID: " + id));
+                .orElseThrow(() -> new InventoryException("Entrepôt non trouvé avec l'ID: " + id));
     }
 
     public List<Warehouse> getAllWarehouses() {
@@ -68,7 +70,10 @@ public class WarehouseService {
         return warehouseRepository.findByActiveTrue();
     }
 
-    public void deleteWarehouse(String id) {
+    public void deleteWarehouse(String id) throws InventoryException {
+        if (!warehouseRepository.existsById(id)){
+            throw  new InventoryException("l'entrepot n'existe pas avec cet id="+id);
+        }
         warehouseRepository.deleteById(id);
     }
 

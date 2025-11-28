@@ -1,6 +1,7 @@
 package com.quamtech.inventory_management.controller;
 
 import com.quamtech.inventory_management.entite.Warehouse;
+import com.quamtech.inventory_management.exception.InventoryException;
 import com.quamtech.inventory_management.payload.ApiResponse;
 import com.quamtech.inventory_management.payload.request.WarehouseRequest;
 import com.quamtech.inventory_management.service.WarehouseService;
@@ -26,13 +27,13 @@ public class WarehouseController {
     }
 
     @PutMapping("/updateWarehouse/{id}")
-    public ResponseEntity<ApiResponse<Warehouse>> updateWarehouse(@PathVariable String id, @Valid @RequestBody WarehouseRequest warehouse) {
+    public ResponseEntity<ApiResponse<Warehouse>> updateWarehouse(@PathVariable String id, @Valid @RequestBody WarehouseRequest warehouse) throws InventoryException {
         Warehouse warehouse1=warehouseService.updateWarehouse(id,warehouse);
         return ResponseEntity.ok(ApiResponse.success("l'entrepot  mis à jour", warehouse1));
     }
 
     @GetMapping("/getwarehouse/{id}")
-    public ResponseEntity<ApiResponse<Warehouse>> getWarehouse(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<Warehouse>> getWarehouse(@PathVariable String id) throws InventoryException {
         Warehouse warehouse=warehouseService.getWarehouseById(id);
         return ResponseEntity.ok(ApiResponse.success("Liste d'entrpot", warehouse));
     }
@@ -47,7 +48,7 @@ public class WarehouseController {
     }
 
     @DeleteMapping("deleteWarehouse/{id}")
-    public ResponseEntity<ApiResponse<Void>> deleteWarehouse(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<Void>> deleteWarehouse(@PathVariable String id) throws InventoryException {
         warehouseService.deleteWarehouse(id);
         return  ResponseEntity.ok(ApiResponse.success("entrepot supprimé avec succes", null));
     }

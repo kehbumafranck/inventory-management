@@ -1,6 +1,7 @@
 package com.quamtech.inventory_management.controller;
 
 import com.quamtech.inventory_management.entite.Location;
+import com.quamtech.inventory_management.exception.InventoryException;
 import com.quamtech.inventory_management.payload.request.LocationRequest;
 import com.quamtech.inventory_management.service.LocationService;
 import jakarta.validation.Valid;
@@ -23,27 +24,27 @@ public class LocationController {
     }
 
     @PutMapping("/updateLocation/{id}")
-    public ResponseEntity<Location> updateLocation(@PathVariable String id, @Valid @RequestBody LocationRequest location) {
+    public ResponseEntity<Location> updateLocation(@PathVariable String id, @Valid @RequestBody LocationRequest location) throws InventoryException {
         return ResponseEntity.ok(locationService.updateLocation(id, location));
     }
 
     @GetMapping("/getLocationById/{id}")
-    public ResponseEntity<Location> getLocation(@PathVariable String id) {
+    public ResponseEntity<Location> getLocation(@PathVariable String id) throws InventoryException {
         return ResponseEntity.ok(locationService.getLocationById(id));
     }
 
     @GetMapping("/getAllLocations")
-    public ResponseEntity<List<Location>> getAllLocations() {
+    public ResponseEntity<List<Location>> getAllLocations() throws InventoryException {
         return ResponseEntity.ok(locationService.getAllLocations());
     }
 
     @GetMapping("/getLocationsByWarehouse/{warehouseId}")
-    public ResponseEntity<List<Location>> getLocationsByWarehouse(@PathVariable String warehouseId) {
+    public ResponseEntity<List<Location>> getLocationsByWarehouse(@PathVariable String warehouseId) throws InventoryException {
         return ResponseEntity.ok(locationService.getLocationsByWarehouse(warehouseId));
     }
 
     @DeleteMapping("/deleteLocation/{id}")
-    public ResponseEntity<Void> deleteLocation(@PathVariable String id) {
+    public ResponseEntity<Void> deleteLocation(@PathVariable String id) throws InventoryException {
         locationService.deleteLocation(id);
         return ResponseEntity.noContent().build();
     }
