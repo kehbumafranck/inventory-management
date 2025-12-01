@@ -66,28 +66,22 @@ public class StockController {
     }
 
     @PostMapping("/reserveStock")
-    public ResponseEntity<ApiResponse<?>> reserveStock(@RequestBody Map<String, Object> request) throws InventoryException {
-        String productId = (String) request.get("productId");
-        String warehouseId = (String) request.get("warehouseId");
-        String locationId = (String) request.get("locationId");
-        String lotId = (String) request.get("lotId");
-        Integer quantity = (Integer) request.get("quantity");
-        String userId = (String) request.get("userId");
+    public ResponseEntity<ApiResponse<?>> reserveStock(/*@RequestBody Map<String, Object> request */@RequestParam String productId,@RequestParam String warehouseId,@RequestParam String locationId,
+                                                                                                    @RequestParam Integer quantity,@RequestParam String userId) throws InventoryException {
+//        String productId = (String) request.get("productId");
+//        String warehouseId = (String) request.get("warehouseId");
+//        String locationId = (String) request.get("locationId");
+//        Integer quantity = (Integer) request.get("quantity");
+//        String userId = (String) request.get("userId");
 
-        Stock stock= stockService.reserveStock(productId, warehouseId, locationId, lotId, quantity, userId);
+        Stock stock= stockService.reserveStock(productId, warehouseId, locationId,  quantity, userId);
         return ResponseEntity.ok(ApiResponse.success("data",stock));
     }
 
     @PostMapping("/releaseReservation")
-    public ResponseEntity<ApiResponse<?>> releaseReservation(@RequestBody Map<String, Object> request) {
-        String productId = (String) request.get("productId");
-        String warehouseId = (String) request.get("warehouseId");
-        String locationId = (String) request.get("locationId");
-        String lotId = (String) request.get("lotId");
-        Integer quantity = (Integer) request.get("quantity");
-        String userId = (String) request.get("userId");
-
-       Stock stock= stockService.releaseReservation(productId, warehouseId, locationId, lotId, quantity, userId);
+    public ResponseEntity<ApiResponse<?>> releaseReservation(@RequestParam String productId,@RequestParam String warehouseId,@RequestParam String locationId,
+                                                                                                         @RequestParam  Integer quantity,@RequestParam String userId) throws InventoryException {
+       Stock stock= stockService.releaseReservation(productId, warehouseId, locationId,  quantity, userId);
         return ResponseEntity.ok(ApiResponse.success("data",stock));
     }
 
@@ -112,7 +106,7 @@ public class StockController {
     }
 
     @DeleteMapping("/deleteStock/{id}")
-    public ResponseEntity<ApiResponse<Void>> deleteStock(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<Void>> deleteStock(@PathVariable String id) throws InventoryException {
         stockService.deleteStock(id);
         return ResponseEntity.ok(ApiResponse.success("entrepot supprimé avec succes", null));
     }

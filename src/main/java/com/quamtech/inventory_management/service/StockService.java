@@ -168,7 +168,7 @@ public class StockService {
 
     //faire une reservation de stock
     public Stock reserveStock(String productId, String warehouseId, String locationId,
-                              String lotId, Integer quantity, String userId) throws InventoryException {
+                              Integer quantity, String userId) throws InventoryException {
         Optional<Stock> stockOpt = stockRepository.findByProductIdAndWarehouseIdAndLocationId(
                 productId, warehouseId, locationId);
 
@@ -190,12 +190,12 @@ public class StockService {
     }
     //Cette méthode annule une partie d’une réservation et remet cette quantité dans le stock disponible
     public Stock releaseReservation(String productId, String warehouseId, String locationId,
-                                    String lotId, Integer quantity, String userId) {
+                                    Integer quantity, String userId) throws InventoryException {
         Optional<Stock> stockOpt = stockRepository.findByProductIdAndWarehouseIdAndLocationId(
                 productId, warehouseId, locationId);
 
         if (!stockOpt.isPresent()) {
-            throw new RuntimeException("Stock non trouvé");
+            throw new InventoryException("Stock non trouvé");
         }
 
         Stock stock = stockOpt.get();
@@ -300,9 +300,9 @@ public class StockService {
                 .collect(Collectors.toList());
     }
     // suprimé le stock par id
-    public void deleteStock(String id) {
+    public void deleteStock(String id) throws InventoryException {
         if (!stockRepository.existsById(id)) {
-            throw new RuntimeException("Stock avec l'ID " + id + " n'existe pas.");
+            throw new InventoryException("Stock avec l'ID " + id + " n'existe pas.");
         }
         stockRepository.deleteById(id);
     }
